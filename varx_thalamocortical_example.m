@@ -1,11 +1,19 @@
+% Runs Lucas Parra's VARX on thalamocortical data (Parra et al. 2024)
+% script and data by chase m 2024
+%
+% Parra, L. C., Ortubay, A. S., Nentwich, M., Madsen, J., & Babadi, B. 
+% (2024). VARX Granger Analysis: Modeling, Inference, and Applications. 
+% arXiv preprint arXiv:2404.10834.
+
 clear 
+close all
 % load  continuous electrophysiological data and trigger times
-load('H:\data\jiggle\simultaneous\rb023imported_nojit.mat'); % assuming this loads variables data1, data2, trigtimes
+load('F:\data\jiggle\simultaneous\rb023imported_nojit.mat'); 
 
 
 %selected channels by user, not working yet, selecting 1:21
-selchans1 = 1:21; % medial genic.
-selchans2 = 1:21; % cortex
+selchans1 = 10:17; % medial genic.
+selchans2 = 4:10; % cortex
 % truncate chans
 LFP1 = LFP1(selchans1,:);
 CSD2 = CSD2(selchans2,:);
@@ -35,30 +43,30 @@ xname = {'Stimulus'};
 
 % Define the FIR filter h (e.g., a Gaussian or a simple moving average)
 % Example: Moving average filter
-h = ones(5, 1) / 5; % A simple moving average filter over 5 samples (5 ms)
-xlags = length(h); % The length of the filter
-
-% Apply the filter using filterMIMO
-[filtered_x, H] = filterMIMO(h, x, xlags);
-
-% Check dimensions to ensure consistency
-disp(size(y)); % e.g [154886, 42]
-disp(size(filtered_x)); % e.g. [154886, 1]
+% h = ones(5, 1) / 5; % A simple moving average filter over 5 samples (5 ms)
+% xlags = length(h); % The length of the filter
+% 
+% % Apply the filter using filterMIMO
+% [filtered_x, H] = filterMIMO(h, x, xlags);
+% 
+% % Check dimensions to ensure consistency
+% disp(size(y)); % e.g [154886, 42]
+% disp(size(filtered_x)); % e.g. [154886, 1]
 
 % Define the VARX model parameters
 na = 10; % Order of autoregression
-nb = 20; % Number of lags for the exogenous input
+nb = 75; % Number of lags for the exogenous input
 lambda = 0; % Regularization parameter
 
 % Fit the VARX model using the filtered exogenous input
-model = varx(y, na, filtered_x, nb, lambda);
+model = varx(y, na, x, nb, lambda);
 
 % Simulate the output using the model
-yest = varx_simulate(model.B, model.A, filtered_x, y);
+yest = varx_simulate(model.B, model.A, x, y);
 
 % Visualization of the original and estimated outputs
 figure(1);
-show_prediction(filtered_x, y, yest);
+show_prediction(x, y, yest);
 
 % Display the VARX model
 figure(2);
